@@ -10,7 +10,7 @@ import {LifecycleManager} from './lifecycle-manager';
 import {RouterManager} from './router';
 
 export function configure(aurelia, configCallback) {
-    LifecycleManager.interceptClassActivator();
+    LifecycleManager.interceptFactoryInvoker();
     LifecycleManager.interceptHtmlBehaviorResource();
     RouterManager.AddFluxPipelineStep(aurelia);
 }

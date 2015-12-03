@@ -1,13 +1,13 @@
 System.register(['aurelia-dependency-injection', 'aurelia-templating', './instance-dispatcher', './flux-dispatcher', './metadata', './symbols', 'bluebird', 'aurelia-router'], function (_export) {
     'use strict';
 
-    var ClassActivator, HtmlBehaviorResource, Dispatcher, DispatcherProxy, FluxDispatcher, Metadata, Symbols, Promise, activationStrategy, LifecycleManager;
+    var FactoryInvoker, HtmlBehaviorResource, Dispatcher, DispatcherProxy, FluxDispatcher, Metadata, Symbols, Promise, activationStrategy, LifecycleManager;
 
     function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
     return {
         setters: [function (_aureliaDependencyInjection) {
-            ClassActivator = _aureliaDependencyInjection.ClassActivator;
+            FactoryInvoker = _aureliaDependencyInjection.FactoryInvoker;
         }, function (_aureliaTemplating) {
             HtmlBehaviorResource = _aureliaTemplating.HtmlBehaviorResource;
         }, function (_instanceDispatcher) {
@@ -108,13 +108,13 @@ System.register(['aurelia-dependency-injection', 'aurelia-templating', './instan
                     };
                 };
 
-                LifecycleManager.interceptClassActivator = function interceptClassActivator() {
-                    if (ClassActivator.instance === undefined || ClassActivator.instance.invoke === undefined) {
-                        throw new Error('Unsupported version of ClassActivator');
+                LifecycleManager.interceptFactoryInvoker = function interceptFactoryInvoker() {
+                    if (FactoryInvoker.instance === undefined || FactoryInvoker.instance.invoke === undefined) {
+                        throw new Error('Unsupported version of FactoryInvoker');
                     }
 
-                    var invokeImpl = ClassActivator.instance.invoke;
-                    ClassActivator.instance.invoke = function () {
+                    var invokeImpl = FactoryInvoker.instance.invoke;
+                    FactoryInvoker.instance.invoke = function () {
                         for (var _len4 = arguments.length, invokeArgs = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
                             invokeArgs[_key4] = arguments[_key4];
                         }
@@ -123,7 +123,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-templating', './instan
                             instance;
 
                         if (Array.isArray(args) === false) {
-                            throw new Error('Unsupported version of ClassActivator');
+                            throw new Error('Unsupported version of FactoryInvoker');
                         }
 
                         var dispatcher = args.find(function (item) {

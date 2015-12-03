@@ -1,5 +1,5 @@
 import {LifecycleManager} from '../src/lifecycle-manager';
-import {ClassActivator} from 'aurelia-dependency-injection';
+import {FactoryInvoker} from 'aurelia-dependency-injection';
 import {FluxDispatcher} from '../src/flux-dispatcher';
 import {Symbols} from '../src/symbols';
 import {HtmlBehaviorResource} from 'aurelia-templating';
@@ -206,7 +206,7 @@ describe('Lifecycle Manager', () => {
         });
     });
 
-    describe('interceptClassActivator', () => {
+    describe('interceptFactoryInvoker', () => {
 
         var invokeImpl,
             instance,
@@ -220,32 +220,32 @@ describe('Lifecycle Manager', () => {
         beforeEach(() => {
             instance = Object.create(instanceProto);
             invokeImpl = jasmine.createSpy('invoke').and.returnValue(instance);
-            ClassActivator.instance.invoke = invokeImpl;
+            FactoryInvoker.instance.invoke = invokeImpl;
         });
 
-        it('intercepts ClassActivator.instance.invoke', () => {
-            LifecycleManager.interceptClassActivator();
-            expect(ClassActivator.instance.invoke).not.toBe(invokeImpl);
+        it('intercepts FactoryInvoker.instance.invoke', () => {
+            LifecycleManager.interceptFactoryInvoker();
+            expect(FactoryInvoker.instance.invoke).not.toBe(invokeImpl);
         });
 
-        describe('intercepted ClassActivator.instance.invoke', () => {         
+        describe('intercepted FactoryInvoker.instance.invoke', () => {
                        
             it('throws an exception when second argument is not an array', () => {
-                LifecycleManager.interceptClassActivator();
-                expect(() => ClassActivator.instance.invoke(null, "")).toThrowError('Unsupported version of ClassActivator');
+                LifecycleManager.interceptFactoryInvoker();
+                expect(() => FactoryInvoker.instance.invoke(null, "")).toThrowError('Unsupported version of FactoryInvoker');
             });                     
                            
             // without dispatcher injected
             describe('without dispatcher injected', () => {
                 it('runs original invoke method', () => {
-                    LifecycleManager.interceptClassActivator();
-                    ClassActivator.instance.invoke(null, []);
+                    LifecycleManager.interceptFactoryInvoker();
+                    FactoryInvoker.instance.invoke(null, []);
                     expect(invokeImpl).toHaveBeenCalled();
                 });
 
                 it('returns proper instance', () => {
-                    LifecycleManager.interceptClassActivator();
-                    var result = ClassActivator.instance.invoke(null, []);
+                    LifecycleManager.interceptFactoryInvoker();
+                    var result = FactoryInvoker.instance.invoke(null, []);
                     expect(result).toBe(instance);
                 });
             });
@@ -261,21 +261,21 @@ describe('Lifecycle Manager', () => {
                 });
 
                 it('runs original invoke method', () => {
-                    LifecycleManager.interceptClassActivator();
-                    ClassActivator.instance.invoke(null, [dispatcher]);
+                    LifecycleManager.interceptFactoryInvoker();
+                    FactoryInvoker.instance.invoke(null, [dispatcher]);
                     expect(invokeImpl).toHaveBeenCalled();
                 });
 
                 it('returns proper instance', () => {
-                    LifecycleManager.interceptClassActivator();
-                    var result = ClassActivator.instance.invoke(null, [dispatcher]);
+                    LifecycleManager.interceptFactoryInvoker();
+                    var result = FactoryInvoker.instance.invoke(null, [dispatcher]);
                     expect(result).toBe(instance);
                 });
 
                 it('replaces injected Dispatcher with DispatcherProxy', (done) => {
-                    LifecycleManager.interceptClassActivator();
+                    LifecycleManager.interceptFactoryInvoker();
                     var args = [dispatcher];
-                    ClassActivator.instance.invoke(null, args);
+                    FactoryInvoker.instance.invoke(null, args);
                     expect(args[0] instanceof DispatcherProxy).toBe(true);
                     args[0].inititalize.then(() => {
                         expect(args[0].instance).toBe(instance);
@@ -284,16 +284,16 @@ describe('Lifecycle Manager', () => {
                 });
 
                 it('sets instance[Symbols.instanceDispatcher] to be new Dispatcher', () => {
-                    LifecycleManager.interceptClassActivator();
+                    LifecycleManager.interceptFactoryInvoker();
                     expect(instance[Symbols.instanceDispatcher]).toBeUndefined();
-                    ClassActivator.instance.invoke(null, [dispatcher]);
+                    FactoryInvoker.instance.invoke(null, [dispatcher]);
                     expect(instance[Symbols.instanceDispatcher]).toBeDefined();
                 });
                 
                 it('intercepts instance deactivators', () => {
                      spyOn(LifecycleManager, 'interceptInstanceDeactivators');
-                     LifecycleManager.interceptClassActivator();
-                     ClassActivator.instance.invoke(null, [dispatcher]);
+                     LifecycleManager.interceptFactoryInvoker();
+                     FactoryInvoker.instance.invoke(null, [dispatcher]);
                      expect(LifecycleManager.interceptInstanceDeactivators).toHaveBeenCalledWith(instance);
                  });
             });              
@@ -307,15 +307,15 @@ describe('Lifecycle Manager', () => {
                  
                  it('runs instance Disptacher.registerMetadata', () => {
                      spyOn(Dispatcher.prototype, 'registerMetadata');
-                     LifecycleManager.interceptClassActivator();                     
-                     ClassActivator.instance.invoke(null, []);
+                     LifecycleManager.interceptFactoryInvoker();
+                     FactoryInvoker.instance.invoke(null, []);
                      expect(Dispatcher.prototype.registerMetadata).toHaveBeenCalled();
                  });
                  
                  it('intercepts instance deactivators', () => {
                      spyOn(LifecycleManager, 'interceptInstanceDeactivators');
-                     LifecycleManager.interceptClassActivator();
-                     ClassActivator.instance.invoke(null, []);
+                     LifecycleManager.interceptFactoryInvoker();
+                     FactoryInvoker.instance.invoke(null, []);
                      expect(LifecycleManager.interceptInstanceDeactivators).toHaveBeenCalledWith(instance);
                  });                                  
             });
