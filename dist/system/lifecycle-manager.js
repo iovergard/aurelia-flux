@@ -87,13 +87,13 @@ System.register(['aurelia-dependency-injection', 'aurelia-templating', './instan
                 };
 
                 LifecycleManager.interceptHtmlBehaviorResource = function interceptHtmlBehaviorResource() {
-                    if (HtmlBehaviorResource === undefined || typeof HtmlBehaviorResource.prototype.analyze !== 'function') {
+                    if (HtmlBehaviorResource === undefined || typeof HtmlBehaviorResource.prototype.initialize !== 'function') {
                         throw new Error('Unsupported version of HtmlBehaviorResource');
                     }
 
-                    var analyzeImpl = HtmlBehaviorResource.prototype.analyze;
+                    var initializeImpl = HtmlBehaviorResource.prototype.initialize;
 
-                    HtmlBehaviorResource.prototype.analyze = function () {
+                    HtmlBehaviorResource.prototype.initialize = function () {
                         for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
                             args[_key3] = arguments[_key3];
                         }
@@ -104,7 +104,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-templating', './instan
                                 target.prototype.detached = function () {};
                             }
                         }
-                        return analyzeImpl.apply(this, args);
+                        return initializeImpl.apply(this, args);
                     };
                 };
 

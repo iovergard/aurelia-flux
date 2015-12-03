@@ -163,18 +163,18 @@ describe('Lifecycle Manager', () => {
 
     describe('interceptHtmlBehaviorResource', () => {
 
-        describe('intercepted analyze method', () => {
+        describe('intercepted initialize method', () => {
 
             it('runs original method', () => {
-                var analyze = jasmine.createSpy('analyze');
-                HtmlBehaviorResource.prototype.analyze = analyze;
+                var initialize = jasmine.createSpy('initialize');
+                HtmlBehaviorResource.prototype.initialize = initialize;
                 LifecycleManager.interceptHtmlBehaviorResource();
-                expect(HtmlBehaviorResource.prototype.analyze).not.toBe(analyze);
+                expect(HtmlBehaviorResource.prototype.initialize).not.toBe(initialize);
 
                 function target() { };
 
-                HtmlBehaviorResource.prototype.analyze(1, target, false);
-                expect(analyze).toHaveBeenCalledWith(1, target, false);
+                HtmlBehaviorResource.prototype.initialize(1, target, false);
+                expect(initialize).toHaveBeenCalledWith(1, target, false);
             });
 
             it('adds detached method to a target with flux metadata', () => {
@@ -187,9 +187,9 @@ describe('Lifecycle Manager', () => {
                 };
 
                 expect(target.prototype.detached).toBeUndefined();
-                HtmlBehaviorResource.prototype.analyze = function () { };
+                HtmlBehaviorResource.prototype.initialize = function () { };
                 LifecycleManager.interceptHtmlBehaviorResource();
-                HtmlBehaviorResource.prototype.analyze(null, target);
+                HtmlBehaviorResource.prototype.initialize(null, target);
                 expect(target.prototype.detached).toBeDefined();
             });
 
@@ -197,9 +197,9 @@ describe('Lifecycle Manager', () => {
                 function target() { }
 
                 expect(target.prototype.detached).toBeUndefined();
-                HtmlBehaviorResource.prototype.analyze = function () { };
+                HtmlBehaviorResource.prototype.initialize = function () { };
                 LifecycleManager.interceptHtmlBehaviorResource();
-                HtmlBehaviorResource.prototype.analyze(null, target);
+                HtmlBehaviorResource.prototype.initialize(null, target);
                 expect(target.prototype.detached).toBeUndefined();
             });
 

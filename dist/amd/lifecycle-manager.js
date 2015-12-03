@@ -71,13 +71,13 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-templating', './inst
         };
 
         LifecycleManager.interceptHtmlBehaviorResource = function interceptHtmlBehaviorResource() {
-            if (_aureliaTemplating.HtmlBehaviorResource === undefined || typeof _aureliaTemplating.HtmlBehaviorResource.prototype.analyze !== 'function') {
+            if (_aureliaTemplating.HtmlBehaviorResource === undefined || typeof _aureliaTemplating.HtmlBehaviorResource.prototype.initialize !== 'function') {
                 throw new Error('Unsupported version of HtmlBehaviorResource');
             }
 
-            var analyzeImpl = _aureliaTemplating.HtmlBehaviorResource.prototype.analyze;
+            var initializeImpl = _aureliaTemplating.HtmlBehaviorResource.prototype.initialize;
 
-            _aureliaTemplating.HtmlBehaviorResource.prototype.analyze = function () {
+            _aureliaTemplating.HtmlBehaviorResource.prototype.initialize = function () {
                 for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
                     args[_key3] = arguments[_key3];
                 }
@@ -88,7 +88,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-templating', './inst
                         target.prototype.detached = function () {};
                     }
                 }
-                return analyzeImpl.apply(this, args);
+                return initializeImpl.apply(this, args);
             };
         };
 

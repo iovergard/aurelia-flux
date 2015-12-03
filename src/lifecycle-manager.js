@@ -56,13 +56,13 @@ export class LifecycleManager {
     }
 
     static interceptHtmlBehaviorResource() {
-      if(HtmlBehaviorResource === undefined || typeof HtmlBehaviorResource.prototype.analyze !== 'function') {
+      if(HtmlBehaviorResource === undefined || typeof HtmlBehaviorResource.prototype.initialize !== 'function') {
         throw new Error('Unsupported version of HtmlBehaviorResource');
       }
 
-      var analyzeImpl = HtmlBehaviorResource.prototype.analyze;
+      var initializeImpl = HtmlBehaviorResource.prototype.initialize;
 
-      HtmlBehaviorResource.prototype.analyze = function(...args) {
+      HtmlBehaviorResource.prototype.initialize = function(...args) {
         let target = args[1];        
         if(    target
             && target.prototype
@@ -73,7 +73,7 @@ export class LifecycleManager {
             target.prototype.detached = function() {};
           }
         }
-        return analyzeImpl.apply(this, args);
+        return initializeImpl.apply(this, args);
       };
     }
 
