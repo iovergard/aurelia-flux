@@ -3,7 +3,9 @@
 exports.__esModule = true;
 exports.configure = configure;
 
-var _lifecycleManager = require('./lifecycle-manager');
+var _dependencyInjection = require('./dependency-injection');
+
+var _templating = require('./templating');
 
 var _router = require('./router');
 
@@ -20,7 +22,8 @@ var _decoratorsWaitFor = require('./decorators/waitFor');
 exports.waitFor = _decoratorsWaitFor.waitFor;
 
 function configure(aurelia, configCallback) {
-    _lifecycleManager.LifecycleManager.interceptFactoryInvoker();
-    _lifecycleManager.LifecycleManager.interceptHtmlBehaviorResource();
+
+    aurelia.container.setHandlerCreatedCallback(_dependencyInjection.handlerCreationCb);
+    _templating.patchHtmlBehaviorResource();
     _router.RouterManager.AddFluxPipelineStep(aurelia);
 }

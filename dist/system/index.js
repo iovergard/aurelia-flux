@@ -1,19 +1,22 @@
-System.register(['./lifecycle-manager', './router', './instance-dispatcher', './decorators/handle', './decorators/waitFor'], function (_export) {
+System.register(['./dependency-injection', './templating', './router', './instance-dispatcher', './decorators/handle', './decorators/waitFor'], function (_export) {
     'use strict';
 
-    var LifecycleManager, RouterManager;
+    var handlerCreationCb, patchHtmlBehaviorResource, RouterManager;
 
     _export('configure', configure);
 
     function configure(aurelia, configCallback) {
-        LifecycleManager.interceptFactoryInvoker();
-        LifecycleManager.interceptHtmlBehaviorResource();
+
+        aurelia.container.setHandlerCreatedCallback(handlerCreationCb);
+        patchHtmlBehaviorResource();
         RouterManager.AddFluxPipelineStep(aurelia);
     }
 
     return {
-        setters: [function (_lifecycleManager) {
-            LifecycleManager = _lifecycleManager.LifecycleManager;
+        setters: [function (_dependencyInjection) {
+            handlerCreationCb = _dependencyInjection.handlerCreationCb;
+        }, function (_templating) {
+            patchHtmlBehaviorResource = _templating.patchHtmlBehaviorResource;
         }, function (_router) {
             RouterManager = _router.RouterManager;
         }, function (_instanceDispatcher) {

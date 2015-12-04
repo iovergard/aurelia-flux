@@ -22,8 +22,9 @@ System.register(['aurelia-router', './flux-dispatcher'], function (_export) {
           var router = aurelia.container.get(Router);
           var configuration = new RouterConfiguration();
 
+          router.container = aurelia.container;
           configuration.addPipelineStep("modelbind", FluxLifeCycleStep);
-          router.configure(configuration);
+          configuration.exportToRouter(router);
         };
 
         return RouterManager;

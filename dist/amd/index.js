@@ -1,4 +1,4 @@
-define(['exports', './lifecycle-manager', './router', './instance-dispatcher', './decorators/handle', './decorators/waitFor'], function (exports, _lifecycleManager, _router, _instanceDispatcher, _decoratorsHandle, _decoratorsWaitFor) {
+define(['exports', './dependency-injection', './templating', './router', './instance-dispatcher', './decorators/handle', './decorators/waitFor'], function (exports, _dependencyInjection, _templating, _router, _instanceDispatcher, _decoratorsHandle, _decoratorsWaitFor) {
     'use strict';
 
     exports.__esModule = true;
@@ -8,8 +8,9 @@ define(['exports', './lifecycle-manager', './router', './instance-dispatcher', '
     exports.waitFor = _decoratorsWaitFor.waitFor;
 
     function configure(aurelia, configCallback) {
-        _lifecycleManager.LifecycleManager.interceptFactoryInvoker();
-        _lifecycleManager.LifecycleManager.interceptHtmlBehaviorResource();
+
+        aurelia.container.setHandlerCreatedCallback(_dependencyInjection.handlerCreationCb);
+        _templating.patchHtmlBehaviorResource();
         _router.RouterManager.AddFluxPipelineStep(aurelia);
     }
 });

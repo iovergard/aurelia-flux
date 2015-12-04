@@ -6,12 +6,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var _aureliaDependencyInjection = require('aurelia-dependency-injection');
-
-var _aureliaTemplating = require('aurelia-templating');
-
-var _instanceDispatcher = require('./instance-dispatcher');
-
 var _fluxDispatcher = require('./flux-dispatcher');
 
 var _metadata = require('./metadata');
@@ -83,75 +77,6 @@ var LifecycleManager = (function () {
                 _fluxDispatcher.FluxDispatcher.instance.unregisterInstanceDispatcher(instance[_symbols.Symbols.instanceDispatcher]);
             };
         }
-    };
-
-    LifecycleManager.interceptHtmlBehaviorResource = function interceptHtmlBehaviorResource() {
-        if (_aureliaTemplating.HtmlBehaviorResource === undefined || typeof _aureliaTemplating.HtmlBehaviorResource.prototype.initialize !== 'function') {
-            throw new Error('Unsupported version of HtmlBehaviorResource');
-        }
-
-        var initializeImpl = _aureliaTemplating.HtmlBehaviorResource.prototype.initialize;
-
-        _aureliaTemplating.HtmlBehaviorResource.prototype.initialize = function () {
-            for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-                args[_key3] = arguments[_key3];
-            }
-
-            var target = args[1];
-            if (target && target.prototype && target.prototype[_symbols.Symbols.metadata] && target.prototype[_symbols.Symbols.metadata].handlers && target.prototype[_symbols.Symbols.metadata].handlers.size) {
-                if (target.prototype.detached === undefined) {
-                    target.prototype.detached = function () {};
-                }
-            }
-            return initializeImpl.apply(this, args);
-        };
-    };
-
-    LifecycleManager.interceptFactoryInvoker = function interceptFactoryInvoker() {
-        if (_aureliaDependencyInjection.FactoryInvoker.instance === undefined || _aureliaDependencyInjection.FactoryInvoker.instance.invoke === undefined) {
-            throw new Error('Unsupported version of FactoryInvoker');
-        }
-
-        var invokeImpl = _aureliaDependencyInjection.FactoryInvoker.instance.invoke;
-        _aureliaDependencyInjection.FactoryInvoker.instance.invoke = function () {
-            for (var _len4 = arguments.length, invokeArgs = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-                invokeArgs[_key4] = arguments[_key4];
-            }
-
-            var args = invokeArgs[1],
-                instance;
-
-            if (Array.isArray(args) === false) {
-                throw new Error('Unsupported version of FactoryInvoker');
-            }
-
-            var dispatcher = args.find(function (item) {
-                return item instanceof _instanceDispatcher.Dispatcher;
-            });
-
-            if (dispatcher) {
-                var instancePromise = _bluebird2['default'].defer();
-                args[args.indexOf(dispatcher)] = new _instanceDispatcher.DispatcherProxy(instancePromise.promise);
-                instance = invokeImpl.apply(this, invokeArgs);
-                instance[_symbols.Symbols.instanceDispatcher] = new _instanceDispatcher.Dispatcher(instance);
-                instancePromise.resolve(instance);
-            } else {
-                instance = invokeImpl.apply(this, invokeArgs);
-            }
-
-            if (_metadata.Metadata.exists(Object.getPrototypeOf(instance))) {
-                if (instance[_symbols.Symbols.instanceDispatcher] === undefined) {
-                    instance[_symbols.Symbols.instanceDispatcher] = new _instanceDispatcher.Dispatcher(instance);
-                }
-                instance[_symbols.Symbols.instanceDispatcher].registerMetadata();
-            }
-
-            if (instance[_symbols.Symbols.instanceDispatcher] !== undefined) {
-                LifecycleManager.interceptInstanceDeactivators(instance);
-            }
-
-            return instance;
-        };
     };
 
     return LifecycleManager;

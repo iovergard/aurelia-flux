@@ -18,6 +18,8 @@ var _bluebird2 = _interopRequireDefault(_bluebird);
 
 var _symbols = require('./symbols');
 
+var _lifecycleManager = require('./lifecycle-manager');
+
 var Handler = function Handler(regexp, handler) {
     _classCallCheck(this, Handler);
 
@@ -26,14 +28,22 @@ var Handler = function Handler(regexp, handler) {
 };
 
 var Dispatcher = (function () {
-    function Dispatcher(instance) {
+    function Dispatcher() {
         _classCallCheck(this, Dispatcher);
 
-        this.instance = instance;
         this.handlers = new Set();
-
-        _fluxDispatcher.FluxDispatcher.instance.registerInstanceDispatcher(this);
     }
+
+    Dispatcher.prototype.connect = function connect(instance) {
+        if (_metadata.Metadata.exists(Object.getPrototypeOf(instance))) {
+            this.instance = instance;
+            instance[_symbols.Symbols.instanceDispatcher] = this;
+            _lifecycleManager.LifecycleManager.interceptInstanceDeactivators(instance);
+
+            this.registerMetadata();
+            _fluxDispatcher.FluxDispatcher.instance.registerInstanceDispatcher(this);
+        }
+    };
 
     Dispatcher.prototype.handle = function handle(patterns, callback) {
         var _this = this;
@@ -103,55 +113,3 @@ var Dispatcher = (function () {
 })();
 
 exports.Dispatcher = Dispatcher;
-
-var DispatcherProxy = (function () {
-    function DispatcherProxy(instancePromise) {
-        var _this4 = this;
-
-        _classCallCheck(this, DispatcherProxy);
-
-        this.inititalize = _bluebird2['default'].resolve(instancePromise).then(function (instance) {
-            _this4.instance = instance;
-        });
-    }
-
-    DispatcherProxy.prototype.handle = function handle(patterns, handler) {
-        var _this5 = this;
-
-        var def = _bluebird2['default'].defer();
-
-        this.inititalize.then(function () {
-            def.resolve(_this5.instance[_symbols.Symbols.instanceDispatcher].handle(patterns, handler));
-        });
-
-        return function () {
-            def.promise.then(function (unregister) {
-                return unregister();
-            });
-        };
-    };
-
-    DispatcherProxy.prototype.waitFor = function waitFor(types, handler) {
-        var _this6 = this;
-
-        this.inititalize.then(function () {
-            _this6.instance[_symbols.Symbols.instanceDispatcher].waitFor(types, handler);
-        });
-    };
-
-    DispatcherProxy.prototype.dispatch = function dispatch(action) {
-        var _this7 = this;
-
-        for (var _len3 = arguments.length, payload = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-            payload[_key3 - 1] = arguments[_key3];
-        }
-
-        this.inititalize.then(function () {
-            _this7.instance[_symbols.Symbols.instanceDispatcher].dispatch.apply(_this7.instance[_symbols.Symbols.instanceDispatcher], [action].concat(payload));
-        });
-    };
-
-    return DispatcherProxy;
-})();
-
-exports.DispatcherProxy = DispatcherProxy;

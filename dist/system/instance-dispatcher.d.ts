@@ -4,11 +4,26 @@ declare module 'aurelia-flux' {
   import { FluxDispatcher }  from 'aurelia-flux/flux-dispatcher';
   import Promise from 'bluebird';
   import { Symbols }  from 'aurelia-flux/symbols';
+  import { LifecycleManager }  from 'aurelia-flux/lifecycle-manager';
   class Handler {
     constructor(regexp: any, handler: any);
   }
   export class Dispatcher {
-    constructor(instance: Object);
+    constructor();
+    
+    /**
+         * Connects the instance related to this Dispatcher.
+         * If there is existing metadata for the instance (i.e. if the
+         * class has methods decorated with @handle or @waitFor
+         * we need to associate the instance with the dispatcher (which
+         * has been created already)
+         * If no metadata is associated, this Dispatcher instance will
+         * not be associated to anything and garbage-collected
+         *
+         * @method connect
+         * @param {instance:Object} instance to connect
+         */
+    connect(instance: Object): any;
     
     /**
          * Registers new handler function for given action patterns
@@ -43,11 +58,5 @@ declare module 'aurelia-flux' {
     dispatch(action: String, ...payload: any[]): void;
     dispatchOwn(action: String, payload: any[]): any;
     registerMetadata(): void;
-  }
-  export class DispatcherProxy {
-    constructor(instancePromise: any);
-    handle(patterns: any, handler: any): any;
-    waitFor(types: any, handler: any): any;
-    dispatch(action: any, ...payload: any[]): any;
   }
 }

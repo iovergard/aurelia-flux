@@ -1,7 +1,7 @@
-System.register(['./metadata', './utils', './flux-dispatcher', 'bluebird', './symbols'], function (_export) {
+System.register(['./metadata', './utils', './flux-dispatcher', 'bluebird', './symbols', './lifecycle-manager'], function (_export) {
     'use strict';
 
-    var Metadata, Utils, FluxDispatcher, Promise, Symbols, Handler, Dispatcher, DispatcherProxy;
+    var Metadata, Utils, FluxDispatcher, Promise, Symbols, LifecycleManager, Handler, Dispatcher;
 
     function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
@@ -16,6 +16,8 @@ System.register(['./metadata', './utils', './flux-dispatcher', 'bluebird', './sy
             Promise = _bluebird['default'];
         }, function (_symbols) {
             Symbols = _symbols.Symbols;
+        }, function (_lifecycleManager) {
+            LifecycleManager = _lifecycleManager.LifecycleManager;
         }],
         execute: function () {
             Handler = function Handler(regexp, handler) {
@@ -26,14 +28,22 @@ System.register(['./metadata', './utils', './flux-dispatcher', 'bluebird', './sy
             };
 
             Dispatcher = (function () {
-                function Dispatcher(instance) {
+                function Dispatcher() {
                     _classCallCheck(this, Dispatcher);
 
-                    this.instance = instance;
                     this.handlers = new Set();
-
-                    FluxDispatcher.instance.registerInstanceDispatcher(this);
                 }
+
+                Dispatcher.prototype.connect = function connect(instance) {
+                    if (Metadata.exists(Object.getPrototypeOf(instance))) {
+                        this.instance = instance;
+                        instance[Symbols.instanceDispatcher] = this;
+                        LifecycleManager.interceptInstanceDeactivators(instance);
+
+                        this.registerMetadata();
+                        FluxDispatcher.instance.registerInstanceDispatcher(this);
+                    }
+                };
 
                 Dispatcher.prototype.handle = function handle(patterns, callback) {
                     var _this = this;
@@ -103,58 +113,6 @@ System.register(['./metadata', './utils', './flux-dispatcher', 'bluebird', './sy
             })();
 
             _export('Dispatcher', Dispatcher);
-
-            DispatcherProxy = (function () {
-                function DispatcherProxy(instancePromise) {
-                    var _this4 = this;
-
-                    _classCallCheck(this, DispatcherProxy);
-
-                    this.inititalize = Promise.resolve(instancePromise).then(function (instance) {
-                        _this4.instance = instance;
-                    });
-                }
-
-                DispatcherProxy.prototype.handle = function handle(patterns, handler) {
-                    var _this5 = this;
-
-                    var def = Promise.defer();
-
-                    this.inititalize.then(function () {
-                        def.resolve(_this5.instance[Symbols.instanceDispatcher].handle(patterns, handler));
-                    });
-
-                    return function () {
-                        def.promise.then(function (unregister) {
-                            return unregister();
-                        });
-                    };
-                };
-
-                DispatcherProxy.prototype.waitFor = function waitFor(types, handler) {
-                    var _this6 = this;
-
-                    this.inititalize.then(function () {
-                        _this6.instance[Symbols.instanceDispatcher].waitFor(types, handler);
-                    });
-                };
-
-                DispatcherProxy.prototype.dispatch = function dispatch(action) {
-                    var _this7 = this;
-
-                    for (var _len3 = arguments.length, payload = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-                        payload[_key3 - 1] = arguments[_key3];
-                    }
-
-                    this.inititalize.then(function () {
-                        _this7.instance[Symbols.instanceDispatcher].dispatch.apply(_this7.instance[Symbols.instanceDispatcher], [action].concat(payload));
-                    });
-                };
-
-                return DispatcherProxy;
-            })();
-
-            _export('DispatcherProxy', DispatcherProxy);
         }
     };
 });

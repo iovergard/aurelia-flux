@@ -1,19 +1,12 @@
-System.register(['aurelia-dependency-injection', 'aurelia-templating', './instance-dispatcher', './flux-dispatcher', './metadata', './symbols', 'bluebird', 'aurelia-router'], function (_export) {
+System.register(['./flux-dispatcher', './metadata', './symbols', 'bluebird', 'aurelia-router'], function (_export) {
     'use strict';
 
-    var FactoryInvoker, HtmlBehaviorResource, Dispatcher, DispatcherProxy, FluxDispatcher, Metadata, Symbols, Promise, activationStrategy, LifecycleManager;
+    var FluxDispatcher, Metadata, Symbols, Promise, activationStrategy, LifecycleManager;
 
     function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
     return {
-        setters: [function (_aureliaDependencyInjection) {
-            FactoryInvoker = _aureliaDependencyInjection.FactoryInvoker;
-        }, function (_aureliaTemplating) {
-            HtmlBehaviorResource = _aureliaTemplating.HtmlBehaviorResource;
-        }, function (_instanceDispatcher) {
-            Dispatcher = _instanceDispatcher.Dispatcher;
-            DispatcherProxy = _instanceDispatcher.DispatcherProxy;
-        }, function (_fluxDispatcher) {
+        setters: [function (_fluxDispatcher) {
             FluxDispatcher = _fluxDispatcher.FluxDispatcher;
         }, function (_metadata) {
             Metadata = _metadata.Metadata;
@@ -84,75 +77,6 @@ System.register(['aurelia-dependency-injection', 'aurelia-templating', './instan
                             FluxDispatcher.instance.unregisterInstanceDispatcher(instance[Symbols.instanceDispatcher]);
                         };
                     }
-                };
-
-                LifecycleManager.interceptHtmlBehaviorResource = function interceptHtmlBehaviorResource() {
-                    if (HtmlBehaviorResource === undefined || typeof HtmlBehaviorResource.prototype.initialize !== 'function') {
-                        throw new Error('Unsupported version of HtmlBehaviorResource');
-                    }
-
-                    var initializeImpl = HtmlBehaviorResource.prototype.initialize;
-
-                    HtmlBehaviorResource.prototype.initialize = function () {
-                        for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-                            args[_key3] = arguments[_key3];
-                        }
-
-                        var target = args[1];
-                        if (target && target.prototype && target.prototype[Symbols.metadata] && target.prototype[Symbols.metadata].handlers && target.prototype[Symbols.metadata].handlers.size) {
-                            if (target.prototype.detached === undefined) {
-                                target.prototype.detached = function () {};
-                            }
-                        }
-                        return initializeImpl.apply(this, args);
-                    };
-                };
-
-                LifecycleManager.interceptFactoryInvoker = function interceptFactoryInvoker() {
-                    if (FactoryInvoker.instance === undefined || FactoryInvoker.instance.invoke === undefined) {
-                        throw new Error('Unsupported version of FactoryInvoker');
-                    }
-
-                    var invokeImpl = FactoryInvoker.instance.invoke;
-                    FactoryInvoker.instance.invoke = function () {
-                        for (var _len4 = arguments.length, invokeArgs = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-                            invokeArgs[_key4] = arguments[_key4];
-                        }
-
-                        var args = invokeArgs[1],
-                            instance;
-
-                        if (Array.isArray(args) === false) {
-                            throw new Error('Unsupported version of FactoryInvoker');
-                        }
-
-                        var dispatcher = args.find(function (item) {
-                            return item instanceof Dispatcher;
-                        });
-
-                        if (dispatcher) {
-                            var instancePromise = Promise.defer();
-                            args[args.indexOf(dispatcher)] = new DispatcherProxy(instancePromise.promise);
-                            instance = invokeImpl.apply(this, invokeArgs);
-                            instance[Symbols.instanceDispatcher] = new Dispatcher(instance);
-                            instancePromise.resolve(instance);
-                        } else {
-                            instance = invokeImpl.apply(this, invokeArgs);
-                        }
-
-                        if (Metadata.exists(Object.getPrototypeOf(instance))) {
-                            if (instance[Symbols.instanceDispatcher] === undefined) {
-                                instance[Symbols.instanceDispatcher] = new Dispatcher(instance);
-                            }
-                            instance[Symbols.instanceDispatcher].registerMetadata();
-                        }
-
-                        if (instance[Symbols.instanceDispatcher] !== undefined) {
-                            LifecycleManager.interceptInstanceDeactivators(instance);
-                        }
-
-                        return instance;
-                    };
                 };
 
                 return LifecycleManager;

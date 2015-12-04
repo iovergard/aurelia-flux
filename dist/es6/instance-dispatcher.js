@@ -3,6 +3,7 @@ import {Utils} from './utils';
 import {FluxDispatcher} from './flux-dispatcher';
 import Promise from 'bluebird';
 import {Symbols} from './symbols';
+import {LifecycleManager} from './lifecycle-manager';
 
 class Handler {
     constructor(regexp, handler) {
@@ -13,11 +14,34 @@ class Handler {
 
 export class Dispatcher {
 
-    constructor(instance : Object) {              
-        this.instance = instance;
+    constructor() {
         this.handlers = new Set();
+    }
 
-        FluxDispatcher.instance.registerInstanceDispatcher(this);
+    /**
+     * Connects the instance related to this Dispatcher.
+     * If there is existing metadata for the instance (i.e. if the
+     * class has methods decorated with @handle or @waitFor
+     * we need to associate the instance with the dispatcher (which
+     * has been created already)
+     * If no metadata is associated, this Dispatcher instance will
+     * not be associated to anything and garbage-collected
+     *
+     * @method connect
+     * @param {instance:Object} instance to connect
+     */
+    connect(instance: Object) {
+        if(Metadata.exists(Object.getPrototypeOf(instance))) {
+
+            // associates the instance with the dispatcher
+            this.instance = instance;
+            instance[Symbols.instanceDispatcher] = this;
+            LifecycleManager.interceptInstanceDeactivators(instance);
+
+            // registers the dispatcher
+            this.registerMetadata();
+            FluxDispatcher.instance.registerInstanceDispatcher(this);
+        }
     }
 
     /**
@@ -94,41 +118,6 @@ export class Dispatcher {
             if(this.instance[methodName] !== undefined && typeof this.instance[methodName] === 'function') {
                 this.handlers.add(new Handler(Utils.patternsToRegex(patterns), this.instance[methodName]));
             }
-        });
-    }
-}
-
-export class DispatcherProxy {
-
-    constructor(instancePromise) {
-        this.inititalize = Promise.resolve(instancePromise).then((instance) => {
-            this.instance = instance;
-        });
-    }
-
-
-    handle(patterns, handler) {
-        var def = Promise.defer();
-        
-        this.inititalize.then(() => {            
-            def.resolve(this.instance[Symbols.instanceDispatcher].handle(patterns, handler));
-        });                
-        
-        return function() {
-            def.promise.then((unregister) => unregister());
-        }
-    }
-
-    waitFor(types, handler) {
-        this.inititalize.then(() => {
-            this.instance[Symbols.instanceDispatcher].waitFor(types, handler);
-        });
-    }
-
-    dispatch(action, ...payload) {
-        this.inititalize.then(() => {
-            this.instance[Symbols.instanceDispatcher].dispatch
-                .apply(this.instance[Symbols.instanceDispatcher],[action].concat(payload));
         });
     }
 }

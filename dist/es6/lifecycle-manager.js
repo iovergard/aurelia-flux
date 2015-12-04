@@ -1,11 +1,9 @@
-import {FactoryInvoker} from 'aurelia-dependency-injection';
-import {HtmlBehaviorResource} from 'aurelia-templating';
-import {Dispatcher, DispatcherProxy} from './instance-dispatcher';
 import {FluxDispatcher} from './flux-dispatcher';
 import {Metadata} from './metadata';
 import {Symbols} from './symbols';
 import Promise from 'bluebird';
 import {activationStrategy} from 'aurelia-router';
+
 
 export class LifecycleManager {
 
@@ -55,66 +53,4 @@ export class LifecycleManager {
       }
     }
 
-    static interceptHtmlBehaviorResource() {
-      if(HtmlBehaviorResource === undefined || typeof HtmlBehaviorResource.prototype.initialize !== 'function') {
-        throw new Error('Unsupported version of HtmlBehaviorResource');
-      }
-
-      var initializeImpl = HtmlBehaviorResource.prototype.initialize;
-
-      HtmlBehaviorResource.prototype.initialize = function(...args) {
-        let target = args[1];        
-        if(    target
-            && target.prototype
-            && target.prototype[Symbols.metadata]
-            && target.prototype[Symbols.metadata].handlers
-            && target.prototype[Symbols.metadata].handlers.size) {
-          if(target.prototype.detached === undefined) {
-            target.prototype.detached = function() {};
-          }
-        }
-        return initializeImpl.apply(this, args);
-      };
-    }
-
-    static interceptFactoryInvoker() {
-        if(FactoryInvoker.instance === undefined || FactoryInvoker.instance.invoke === undefined) {
-            throw new Error('Unsupported version of FactoryInvoker');
-        }
-
-        var invokeImpl = FactoryInvoker.instance.invoke;
-        FactoryInvoker.instance.invoke = function(...invokeArgs) {
-            var args = invokeArgs[1],
-                instance;                
-
-            if(Array.isArray(args) === false) {
-                throw new Error('Unsupported version of FactoryInvoker');
-            }
-            
-            var dispatcher = args.find((item) => { return item instanceof Dispatcher; });
-            
-            if(dispatcher) {
-                var instancePromise = Promise.defer();
-                args[args.indexOf(dispatcher)] = new DispatcherProxy(instancePromise.promise);
-                instance = invokeImpl.apply(this, invokeArgs);                
-                instance[Symbols.instanceDispatcher] = new Dispatcher(instance);
-                instancePromise.resolve(instance);
-            } else {
-                instance = invokeImpl.apply(this, invokeArgs);
-            }
-            
-            if(Metadata.exists(Object.getPrototypeOf(instance))) {
-                if(instance[Symbols.instanceDispatcher] === undefined) {
-                    instance[Symbols.instanceDispatcher] = new Dispatcher(instance);
-                }                
-                instance[Symbols.instanceDispatcher].registerMetadata();
-            }
-
-            if(instance[Symbols.instanceDispatcher] !== undefined) {
-                LifecycleManager.interceptInstanceDeactivators(instance);
-            }
-
-            return instance;
-        };
-    }
 }
