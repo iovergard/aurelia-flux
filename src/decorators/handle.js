@@ -1,4 +1,6 @@
 import {Metadata} from '../metadata';
+
+
 export function handle(...patterns) {
 
     return function(target, method) {
