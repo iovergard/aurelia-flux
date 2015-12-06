@@ -20,28 +20,23 @@ export class Dispatcher {
 
     /**
      * Connects the instance related to this Dispatcher.
-     * If there is existing metadata for the instance (i.e. if the
-     * class has methods decorated with @handle or @waitFor
-     * we need to associate the instance with the dispatcher (which
-     * has been created already)
-     * If no metadata is associated, this Dispatcher instance will
-     * not be associated to anything and garbage-collected
      *
      * @method connect
      * @param {instance:Object} instance to connect
      */
     connect(instance: Object) {
-        if(Metadata.exists(Object.getPrototypeOf(instance))) {
 
-            // associates the instance with the dispatcher
-            this.instance = instance;
-            instance[Symbols.instanceDispatcher] = this;
-            LifecycleManager.interceptInstanceDeactivators(instance);
+        // associates the instance with the dispatcher
+        this.instance = instance;
 
-            // registers the dispatcher
-            this.registerMetadata();
-            FluxDispatcher.instance.registerInstanceDispatcher(this);
-        }
+        // registers the dispatcher
+        this.registerMetadata();
+        FluxDispatcher.instance.registerInstanceDispatcher(this);
+
+        // prepares de-registration
+        instance[Symbols.instanceDispatcher] = this;
+        LifecycleManager.interceptInstanceDeactivators(instance);
+
     }
 
     /**
