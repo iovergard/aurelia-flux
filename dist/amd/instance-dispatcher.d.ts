@@ -13,12 +13,6 @@ declare module 'aurelia-flux' {
     
     /**
          * Connects the instance related to this Dispatcher.
-         * If there is existing metadata for the instance (i.e. if the
-         * class has methods decorated with @handle or @waitFor
-         * we need to associate the instance with the dispatcher (which
-         * has been created already)
-         * If no metadata is associated, this Dispatcher instance will
-         * not be associated to anything and garbage-collected
          *
          * @method connect
          * @param {instance:Object} instance to connect

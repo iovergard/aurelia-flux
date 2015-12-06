@@ -35,14 +35,13 @@ System.register(['./metadata', './utils', './flux-dispatcher', 'bluebird', './sy
                 }
 
                 Dispatcher.prototype.connect = function connect(instance) {
-                    if (Metadata.exists(Object.getPrototypeOf(instance))) {
-                        this.instance = instance;
-                        instance[Symbols.instanceDispatcher] = this;
-                        LifecycleManager.interceptInstanceDeactivators(instance);
+                    this.instance = instance;
 
-                        this.registerMetadata();
-                        FluxDispatcher.instance.registerInstanceDispatcher(this);
-                    }
+                    this.registerMetadata();
+                    FluxDispatcher.instance.registerInstanceDispatcher(this);
+
+                    instance[Symbols.instanceDispatcher] = this;
+                    LifecycleManager.interceptInstanceDeactivators(instance);
                 };
 
                 Dispatcher.prototype.handle = function handle(patterns, callback) {

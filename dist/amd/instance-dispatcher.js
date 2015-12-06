@@ -24,14 +24,13 @@ define(['exports', './metadata', './utils', './flux-dispatcher', 'bluebird', './
         }
 
         Dispatcher.prototype.connect = function connect(instance) {
-            if (_metadata.Metadata.exists(Object.getPrototypeOf(instance))) {
-                this.instance = instance;
-                instance[_symbols.Symbols.instanceDispatcher] = this;
-                _lifecycleManager.LifecycleManager.interceptInstanceDeactivators(instance);
+            this.instance = instance;
 
-                this.registerMetadata();
-                _fluxDispatcher.FluxDispatcher.instance.registerInstanceDispatcher(this);
-            }
+            this.registerMetadata();
+            _fluxDispatcher.FluxDispatcher.instance.registerInstanceDispatcher(this);
+
+            instance[_symbols.Symbols.instanceDispatcher] = this;
+            _lifecycleManager.LifecycleManager.interceptInstanceDeactivators(instance);
         };
 
         Dispatcher.prototype.handle = function handle(patterns, callback) {

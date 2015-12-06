@@ -18,17 +18,46 @@ export class DispatcherResolver {
 }
 
 export function handlerCreationCb(handler) {
-    let index = handler.dependencies.indexOf(Dispatcher);
+    let index = handler.dependencies.indexOf(Dispatcher),
+        invoke = handler.invoke;
 
-    if(index !== -1) {
+    if(index === -1) {
+        // if Dispatcher is not injected, we need to monkey-patch invoke
+        // to check if some Metadata for the instance exists (i.e. if some
+        // methods have been decorated by @handle or @waitFor)
+
+        // TODO: replace this by automatic registration when a decorator
+        // is used on a method, instead of monkey-patching invoke for every
+        // class
+
+        handler.invoke = function(container, dynamicDependencies) {
+            let instance = invoke.call(this, container, dynamicDependencies);
+
+            // no DispatcherResolver has been called, so we need to manually
+            // create the Dispatcher if the instance has metadata attached
+
+            if (Metadata.exists(Object.getPrototypeOf(instance))) {
+                (new Dispatcher()).connect(instance);
+            }
+
+            return instance;
+        };
+
+    } else {
+        // if a Dispatcher is injected, we turn the handler dependency into
+        // a DispatcherResolver and monkey-patch the invoke method so that
+        // the new Dispatcher instance created by DispatcherResolved is
+        // associated with the instance
+
         handler.dependencies[index] = new DispatcherResolver();
 
-        let invoke = handler.invoke;
         handler.invoke = function(container, dynamicDependencies) {
 
-            let instance = invoke.call(handler, container, dynamicDependencies);
+            let instance = invoke.call(this, container, dynamicDependencies);
 
-            container._lastDispatcher.connect(instance);
+            if (Metadata.exists(Object.getPrototypeOf(instance))) {
+                container._lastDispatcher.connect(instance);
+            }
             container._lastDispatcher = null;
 
             return instance;

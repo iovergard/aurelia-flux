@@ -8,23 +8,35 @@ System.register(['aurelia-dependency-injection', './instance-dispatcher', './met
     function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
     function handlerCreationCb(handler) {
-        var index = handler.dependencies.indexOf(Dispatcher);
+        var index = handler.dependencies.indexOf(Dispatcher),
+            invoke = handler.invoke;
 
-        if (index !== -1) {
-            (function () {
-                handler.dependencies[index] = new DispatcherResolver();
+        if (index === -1) {
 
-                var invoke = handler.invoke;
-                handler.invoke = function (container, dynamicDependencies) {
+            handler.invoke = function (container, dynamicDependencies) {
+                var instance = invoke.call(this, container, dynamicDependencies);
 
-                    var instance = invoke.call(handler, container, dynamicDependencies);
+                if (Metadata.exists(Object.getPrototypeOf(instance))) {
+                    new Dispatcher().connect(instance);
+                }
 
+                return instance;
+            };
+        } else {
+
+            handler.dependencies[index] = new DispatcherResolver();
+
+            handler.invoke = function (container, dynamicDependencies) {
+
+                var instance = invoke.call(this, container, dynamicDependencies);
+
+                if (Metadata.exists(Object.getPrototypeOf(instance))) {
                     container._lastDispatcher.connect(instance);
-                    container._lastDispatcher = null;
+                }
+                container._lastDispatcher = null;
 
-                    return instance;
-                };
-            })();
+                return instance;
+            };
         }
 
         return handler;
