@@ -12,7 +12,13 @@ export class DispatcherResolver {
         // returns a new Dispatcher each time, as each instance has its own
         // Dispatcher instance. If it is not used (= not associated to an
         // instance) it will be garbage-collected
-        return container._lastDispatcher = new Dispatcher();
+        var newDispatcher = new Dispatcher();
+        try {
+            container._dispatchers.push(newDispatcher);
+        } catch (e) {
+            container._dispatchers = [newDispatcher];
+        }
+        return newDispatcher;
     }
 
 }
@@ -55,10 +61,10 @@ export function handlerCreationCb(handler) {
 
             let instance = invoke.call(this, container, dynamicDependencies);
 
+            var dispatcher = container._dispatchers.pop();
             if (Metadata.exists(Object.getPrototypeOf(instance))) {
-                container._lastDispatcher.connect(instance);
+                dispatcher.connect(instance);
             }
-            container._lastDispatcher = null;
 
             return instance;
         };

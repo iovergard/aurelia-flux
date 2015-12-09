@@ -12,7 +12,13 @@ define(['exports', 'aurelia-dependency-injection', './instance-dispatcher', './m
         }
 
         DispatcherResolver.prototype.get = function get(container) {
-            return container._lastDispatcher = new _instanceDispatcher.Dispatcher();
+            var newDispatcher = new _instanceDispatcher.Dispatcher();
+            try {
+                container._dispatchers.push(newDispatcher);
+            } catch (e) {
+                container._dispatchers = [newDispatcher];
+            }
+            return newDispatcher;
         };
 
         var _DispatcherResolver = DispatcherResolver;
@@ -45,10 +51,10 @@ define(['exports', 'aurelia-dependency-injection', './instance-dispatcher', './m
 
                 var instance = invoke.call(this, container, dynamicDependencies);
 
+                var dispatcher = container._dispatchers.pop();
                 if (_metadata.Metadata.exists(Object.getPrototypeOf(instance))) {
-                    container._lastDispatcher.connect(instance);
+                    dispatcher.connect(instance);
                 }
-                container._lastDispatcher = null;
 
                 return instance;
             };

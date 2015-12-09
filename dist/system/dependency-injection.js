@@ -30,10 +30,10 @@ System.register(['aurelia-dependency-injection', './instance-dispatcher', './met
 
                 var instance = invoke.call(this, container, dynamicDependencies);
 
+                var dispatcher = container._dispatchers.pop();
                 if (Metadata.exists(Object.getPrototypeOf(instance))) {
-                    container._lastDispatcher.connect(instance);
+                    dispatcher.connect(instance);
                 }
-                container._lastDispatcher = null;
 
                 return instance;
             };
@@ -59,7 +59,13 @@ System.register(['aurelia-dependency-injection', './instance-dispatcher', './met
                 }
 
                 DispatcherResolver.prototype.get = function get(container) {
-                    return container._lastDispatcher = new Dispatcher();
+                    var newDispatcher = new Dispatcher();
+                    try {
+                        container._dispatchers.push(newDispatcher);
+                    } catch (e) {
+                        container._dispatchers = [newDispatcher];
+                    }
+                    return newDispatcher;
                 };
 
                 var _DispatcherResolver = DispatcherResolver;
